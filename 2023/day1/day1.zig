@@ -6,11 +6,11 @@ const test_input = @embedFile("test_input.txt");
 const test_input2 = @embedFile("test_input2.txt");
 
 pub fn main() void {
-    print("Part 1: {}\n", .{part1(input.len, input)});
-    print("Part 2: {}\n", .{part2(input.len, input)});
+    print("Part 1: {}\n", .{part1(input)});
+    print("Part 2: {}\n", .{part2(input)});
 }
 
-fn part1(comptime len: usize, in: *const [len:0]u8) usize {
+fn part1(in: []const u8) usize {
     var sum: usize = 0;
     var lines = std.mem.tokenizeAny(u8, in, "\n");
     while (lines.next()) |line| {
@@ -24,7 +24,7 @@ fn part1(comptime len: usize, in: *const [len:0]u8) usize {
     return sum;
 }
 
-fn part2(comptime len: usize, in: *const [len:0]u8) usize {
+fn part2(in: []const u8) usize {
     var sum: usize = 0;
     var lines = std.mem.tokenizeAny(u8, in, "\n");
     while (lines.next()) |line| {
@@ -82,12 +82,12 @@ fn part2(comptime len: usize, in: *const [len:0]u8) usize {
 
 test "Part 1" {
     const expected: usize = 142;
-    const actual = part1(test_input.len, test_input);
+    const actual = part1(test_input);
     try std.testing.expectEqual(expected, actual);
 }
 
 test "Part 2" {
     const expected: usize = 281;
-    const actual = part2(test_input2.len, test_input2);
+    const actual = part2(test_input2);
     try std.testing.expectEqual(expected, actual);
 }
