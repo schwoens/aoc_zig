@@ -6,6 +6,7 @@ const test_input = @embedFile("test_input.txt");
 
 pub fn main() !void {
     print("Part 1: {}\n", .{try part1(input)});
+    print("Part 2: {}\n", .{try part2(input)});
 }
 
 fn part1(in: []const u8) !usize {
@@ -48,6 +49,74 @@ fn part1(in: []const u8) !usize {
     return sum;
 }
 
+fn part2(in: []const u8) !usize {
+    var sum: usize = 0;
+    var lines = std.mem.tokenizeAny(u8, in, "\n");
+    var above: ?[]const u8 = null;
+    var line = lines.next();
+    var below = lines.next();
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    while (line != null) {
+        var i: usize = 0;
+        while (i < line.?.len) : (i += 1) {
+            if (line.?[i] == '*') {
+                const nums = try getAdjacentNumbers(.{ above, line, below }, i, allocator);
+                if (nums.len == 2) {
+                    sum += nums[0] * nums[1];
+                }
+            }
+        }
+        above = line;
+        line = below;
+        below = lines.next();
+    }
+    return sum;
+}
+
+fn getAdjacentNumbers(lines: [3]?[]const u8, i: usize, allocator: std.mem.Allocator) ![]usize {
+    var numbers = std.ArrayList(usize).init(allocator);
+    defer numbers.deinit();
+
+    var digits = std.ArrayList(u8).init(allocator);
+    defer digits.deinit();
+
+    var x: isize = -1;
+    while (x < 2) : (x += 1) {
+        for (lines) |line| {
+            if (line != null) {
+                const ii: isize = @intCast(i);
+                var index: usize = @intCast(ii + x);
+                while (std.ascii.isDigit(line.?[index])) : (index -= 1) {
+                    try digits.insert(0, line.?[index]);
+                    if (index == 0) break;
+                }
+                index = @intCast(ii + x);
+                while (std.ascii.isDigit(line.?[index])) : (index += 1) {
+                    if (index == ii + x) continue;
+                    try digits.append(line.?[index]);
+                    if (index == line.?.len - 1) break;
+                }
+
+                if (digits.items.len < 1) {
+                    continue;
+                }
+                const slice = try digits.toOwnedSlice();
+                const num = try std.fmt.parseInt(usize, slice, 10);
+                for (numbers.items) |number| {
+                    if (number == num) break;
+                } else {
+                    try numbers.append(num);
+                }
+            }
+        }
+    }
+    return numbers.toOwnedSlice();
+}
+
 fn isSymbol(c: u8) bool {
     return c != '.' and !std.ascii.isDigit(c);
 }
@@ -70,5 +139,11 @@ fn isAdjacentToSymbol(line: []const u8, above: ?[]const u8, below: ?[]const u8, 
 test "Part 1" {
     const expected: usize = 4361;
     const actual = try part1(test_input);
+    try std.testing.expectEqual(expected, actual);
+}
+
+test "Part 2" {
+    const expected: usize = 467835;
+    const actual = try part2(test_input);
     try std.testing.expectEqual(expected, actual);
 }
